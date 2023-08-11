@@ -1,3 +1,29 @@
+/*
+Task 7
+Assignment Title: Social Network Graph
+Task: Create a GUI application that allows users to visualize a social network graph.
+Scenario: You have been hired by a social media company to create a tool that visualizes the connections between
+users. The company wants to see how users are connected and which users have the most influence over others.
+Requirements:
+1. The application should have a window with a canvas where the graph will be drawn.
+2. The nodes of the graph should represent users, and the edges should represent connections between users.
+3. The application should read the user data from a file and create the graph accordingly.
+4. Each node should display the user's name, profile picture, and the number of followers they have.
+5. The edges should display the strength of the connection between the users, such as the number of likes,
+comments, or shares between them.
+6. The user should be able to select and move nodes around the canvas.
+7. The user should be able to delete nodes and edges by selecting them and pressing the delete key.
+8. The application should have a toolbar with buttons for selecting mode, adding nodes, and adding edges.
+9. The application should allow the user to search for a user and highlight their node and connections.
+Grading Criteria:
+1. The application should meet all the requirements mentioned above.
+2. The user interface should be intuitive and easy to use.
+3. The application should be bug-free and stable.
+4. The application should be well-documented and commented.
+5. Bonus points will be given for additional features, such as algorithms to find the most influential users or
+to calculate the shortest path between two users
+ */
+
 package Q7;
 
 import javax.imageio.ImageIO;
@@ -25,21 +51,34 @@ public class SocialNetworkGraphApp {
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             SocialNetworkGraphPanel graphPanel = new SocialNetworkGraphPanel();
+            JPanel searchPanel = new JPanel();
             frame.add(graphPanel, BorderLayout.CENTER);
 
             JToolBar toolBar = new JToolBar();
             JButton addNodeButton = new JButton("Add Node");
             JButton addEdgeButton = new JButton("Add Edge");
 
-            addNodeButton.addActionListener(e -> graphPanel.addNewNode());
+            JLabel mostFollowedUserLabel = new JLabel("Most Followed User: ");
+            addNodeButton.addActionListener(e -> {
+                graphPanel.addNewNode();
+                SocialNetworkGraphPanel.Node mostFollowedUser = graphPanel.findMostFollowedUser();
+                if (mostFollowedUser != null) {
+                    mostFollowedUserLabel.setText("Most Followed User: " + mostFollowedUser.userName + " (" + mostFollowedUser.followers + " followers)");
+                }
+
+                // Repaint the search panel to reflect changes
+                searchPanel.repaint();
+            });
             addEdgeButton.addActionListener(e -> graphPanel.addNewEdge());
 
             toolBar.add(addNodeButton);
             toolBar.add(addEdgeButton);
             frame.add(toolBar, BorderLayout.NORTH);
 
+
+
             JTextField searchField = new JTextField();
-            searchField.setColumns(20);
+            searchField.setColumns(10); // Decrease the column count to make the search box smaller
             JButton searchButton = new JButton("Search");
 
             searchButton.addActionListener(e -> {
@@ -48,16 +87,26 @@ public class SocialNetworkGraphApp {
                 graphPanel.repaint();
             });
 
-            JPanel searchPanel = new JPanel();
+// Create a panel for the search components
+
+            searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5)); // Use FlowLayout to control component placement
+            searchPanel.add(mostFollowedUserLabel);
             searchPanel.add(new JLabel("Search User: "));
             searchPanel.add(searchField);
             searchPanel.add(searchButton);
 
             frame.add(searchPanel, BorderLayout.SOUTH);
 
+
             frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             frame.setVisible(true);
             graphPanel.requestFocusInWindow();
+
+            SocialNetworkGraphPanel.Node mostFollowedUser = graphPanel.findMostFollowedUser();
+            if (mostFollowedUser != null) {
+                mostFollowedUserLabel.setText("Most Followed User: " + mostFollowedUser.userName + " (" + mostFollowedUser.followers + " followers)");
+            }
+
         });
     }
 }
@@ -171,6 +220,8 @@ class SocialNetworkGraphPanel extends JPanel {
                     nodeMap.put(userName, newNode);
                     adjustNodePositions();
                     repaint();
+
+
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(this, "Invalid number format for followers.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -363,9 +414,21 @@ class SocialNetworkGraphPanel extends JPanel {
     }
 
 
+    public Node findMostFollowedUser() {
+        Node mostFollowedUser = null;
+        int maxFollowers = Integer.MIN_VALUE;
 
+        for (Node node : nodes) {
+            if (node.followers > maxFollowers) {
+                maxFollowers = node.followers;
+                mostFollowedUser = node;
+            }
+        }
 
-    private class Node {
+        return mostFollowedUser;
+    }
+
+    class Node {
         public String profileImagePath;
         private BufferedImage profileImage;
         int x, y;
@@ -385,20 +448,20 @@ class SocialNetworkGraphPanel extends JPanel {
             return new Rectangle(x - 30, y - 30, 60, 60).contains(point);
         }
 
-         void draw(Graphics g) {
-             if (isSelected) {
-                 g.setColor(Color.blue); // Change color for selected node
-             } else {
-                 g.setColor(Color.lightGray);
-             }
-             g.fillOval(x - 30, y - 30, 60, 60);
-             g.setColor(Color.black);
-             g.drawString(userName + " (" + followers + " followers)", x - 30, y + 50);
-             if (profileImage != null) {
-                 int imageSize = 40;
-                 g.drawImage(profileImage, x - imageSize / 2, y - imageSize / 2, imageSize, imageSize, null);
-             }
-         }
+        void draw(Graphics g) {
+            if (isSelected) {
+                g.setColor(Color.blue); // Change color for selected node
+            } else {
+                g.setColor(Color.lightGray);
+            }
+            g.fillOval(x - 30, y - 30, 60, 60);
+            g.setColor(Color.black);
+            g.drawString(userName + " (" + followers + " followers)", x - 30, y + 50);
+            if (profileImage != null) {
+                int imageSize = 40;
+                g.drawImage(profileImage, x - imageSize / 2, y - imageSize / 2, imageSize, imageSize, null);
+            }
+        }
     }
 
     private class Edge {
